@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Avaliacao;
+use App\Models\Campaign;
 use App\Models\Chat;
 use App\Models\Colaborador;
 use App\Models\Customer;
@@ -23,8 +24,6 @@ class EventsController extends Controller
     public function storeAvaliacao(Request $request)
     {
         //    dd($request->all());
-
-
         // Crie uma nova instância de Avaliacao
         $avaliacao = new Avaliacao();
 
@@ -158,7 +157,6 @@ class EventsController extends Controller
         // Configurar o Carbon para usar o fuso horário de São Paulo
         $now = Carbon::now('America/Sao_Paulo');
 
-
         $daysOfWeek = [
             0 => 'domingo',
             1 => 'segunda',
@@ -180,30 +178,40 @@ class EventsController extends Controller
             ->where('end_time', '>=', $currentTime)
             ->exists();
 
-        // Use dd() para depuração
         if (!$exists) {
             print_r('Fora de Data de Agendamento' . $currentTime);
             exit;
         }
 
-        foreach ($devices as $device) {
-            $mensagen = Messagen::where('device_id', null)->whereNot('number', "")->where('number', 'like', '55119%')->limit(1)->get();
-            // Obtém o número de mensagens enviadas nas últimas horas
-            $messageCount = $device->message_count_last_hour;
+        // Obter campanhas ativas
+        $campaigns = Campaign::where('status', 'play')->with(['contactList' => function ($query) {
+            $query->wherePivot('send', false);
+        }])->get();
 
 
-            // Verifica se o número de mensagens enviadas nas últimas horas é menor ou igual a 39
-            if ($messageCount <= 39 && isset($mensagen)) {
+        foreach ($campaigns as $campaign) {
+            foreach ($devices as $device) {
+            
+                // Verifica se o número de mensagens enviadas nas últimas horas é menor ou igual a 39
+                $messageCount = $device->message_count_last_hour;
+               
+                if ($messageCount <= 39) {
+                    foreach ($campaign->contactList as $contactList) {
+                        if ($contactList->phone != "" ) {
+                            $imagen = asset($campaign->imagem->caminho);
+                            $texto = "";
+                            if($campaign->texto != null){
+                                $texto = $campaign->texto;
+                            }
+                            $this->sendImage($device->session, $contactList->phone, $imagen, $texto);
 
-                foreach ($mensagen as $mensage) {
+                            // Marcar como enviado
+                            $contactList->pivot->send = true;
+                            $contactList->pivot->save();
 
-                    $imagen = asset($mensage->imagem->caminho);
-                    $mensage->device_id = $device->id;
-                    $mensage->update();
-
-                    $this->sendImage($device->session, $mensage->number, $imagen, $mensage->messagem);
-
-                    echo 'enviado : ' . $mensage->number . ' <br>';
+                            echo 'enviado : ' . $contactList->phone . ' <br>';
+                        }
+                    }
                 }
             }
         }

@@ -59,26 +59,26 @@ class ContactsController extends Controller
         if ($request->hasFile('csvFile')) {
             $file = $request->file('csvFile');
             $contactId = $request->input('contact_id');
-            
+
             // Verifique se o contact_id está sendo recebido corretamente
             if (!$contactId) {
                 return response()->json(['message' => 'ID do contato não fornecido'], 400);
             }
-    
+
             // Tente buscar o contato
             $contact = Contact::find($contactId);
-            
+
             if (!$contact) {
                 return response()->json(['message' => 'Contato não encontrado'], 404);
             }
-    
+
             $handle = new SplFileObject($file->getPathname(), 'r');
             $handle->seek(1);
-    
+
             while (!$handle->eof()) {
                 $linha = $handle->fgets();
                 $linha = str_getcsv($linha);
-    
+
                 if (!empty($linha)) {
                     $phone = $linha[0];
                     $phoneFormater = $this->formatarTexto($phone);
@@ -90,13 +90,13 @@ class ContactsController extends Controller
                     }
                 }
             }
-    
+
             return response()->json(['message' => 'Contatos salvos com sucesso']);
         } else {
             return response()->json(['message' => 'Nenhum arquivo enviado'], 400);
         }
     }
-    
+
 
 
     public function store(Request $request)
@@ -153,5 +153,26 @@ class ContactsController extends Controller
         }
 
         return false;
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $contact = Contact::findOrFail($id);
+        $contact->name = $request->name;
+        $contact->save();
+
+        return response()->json(['success' => true]);
+    }
+
+    public function delete(Request $request)
+    {
+        $contact = Contact::findOrFail($request->id);
+        $contact->delete();
+
+        return response()->json(['success' => true]);
     }
 }

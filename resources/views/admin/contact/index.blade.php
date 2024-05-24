@@ -62,9 +62,10 @@
         /* Remove o contorno padrão */
         outline: none;
     }
+
     .left-input {
         display: flex;
-    justify-content: space-between;
+        justify-content: space-between;
     }
 </style>
 
@@ -126,18 +127,96 @@
                             <td>{{ $contact->name }}</td>
                             <td>{{ $contact->contact_lists_count }}</td>
                             <td>
-                                <a href="{{ route('admin.contact.show', $contact->id) }}" class="btn btn-info">Ver
-                                    Contatos</a>
+                                <a href="{{ route('admin.contact.show', $contact->id) }}" class="btn btn-info"> <i
+                                        class="fas fa-eye"></i></a>
+                                <button class="btn btn-primary"
+                                    onclick="editContact('{{ $contact->id }}', '{{ $contact->name }}')">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteContact('{{ $contact->id }}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
+
+        <div class="modal fade" id="editContactModal" tabindex="-1" role="dialog" aria-labelledby="editContactModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editContactModalLabel">Editar Contato</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editContactForm">
+                            @csrf
+                            @method('PUT')
+                            <div class="form-group">
+                                <label for="contactName">Nome do Contato</label>
+                                <input type="text" class="form-control" id="contactName" name="name">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Salvar</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </section>
 @endsection
 
 @section('scripts')
+    <script>
+        function editContact(id, name) {
+            $('#editContactForm').attr('action', `/contatos/updateLista/${id}`);
+            $('#contactName').val(name);
+            $('#editContactModal').modal('show');
+        }
+
+        $('#editContactForm').on('submit', function(event) {
+            event.preventDefault();
+
+            var form = $(this);
+            var actionUrl = form.attr('action');
+
+            $.ajax({
+                type: 'PUT',
+                url: actionUrl,
+                data: form.serialize(),
+                success: function(response) {
+                    location.reload();
+                },
+                error: function(response) {
+                    alert('Erro ao atualizar o contato.');
+                }
+            });
+        });
+
+        function deleteContact(id) {
+            if (confirm('Tem certeza que deseja deletar este contato?')) {
+                $.ajax({
+                    type: 'DELETE',
+                    url: `{{ route('admin.contact.deleteLista') }}`,
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        id: id
+                    },
+                    success: function(response) {
+                        location.reload();
+                    },
+                    error: function(response) {
+                        alert('Erro ao deletar o contato.');
+                    }
+                });
+            }
+        }
+    </script>
     <script>
         $(document).ready(function() {
             $('#csvFile').change(function() {

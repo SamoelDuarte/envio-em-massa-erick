@@ -9,7 +9,7 @@ class ContactList extends Model
 {
     use HasFactory;
 
-    protected $table = 'contact_list';
+    protected $table = 'contact_list'; // Certifique-se de que o nome da tabela está correto
 
     /**
      * Get the contact that owns the contact list.
@@ -17,5 +17,12 @@ class ContactList extends Model
     public function contact()
     {
         return $this->belongsTo(Contact::class, 'contact_id');
+    }
+
+    public function campaigns()
+    {
+        return $this->belongsToMany(Campaign::class, 'campaign_contact')
+                    ->withPivot('send')
+                    ->withTimestamps();
     }
 }

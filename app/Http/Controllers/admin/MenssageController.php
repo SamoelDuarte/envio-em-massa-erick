@@ -4,12 +4,17 @@ namespace App\Http\Controllers\admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Agendamento;
+use App\Models\Campaign;
+use App\Models\CampaignContact;
+use App\Models\Contact;
+use App\Models\ContactList;
 use App\Models\Customer;
 use App\Models\ImagemEmMassa;
 use App\Models\Messagen;
 use GuzzleHttp\Psr7\Message;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Validator;
 use SplFileObject;
 use Yajra\DataTables\Facades\DataTables;
 
@@ -20,7 +25,15 @@ class MenssageController extends Controller
 
     public function index()
     {
-        return view('admin.message.index');
+        $campaigns = Campaign::withCount('contact')
+            ->with('contact')
+            ->get()
+            ->map(function ($campaign) {
+                $campaign->total_to_send = $campaign->contact->count();
+                $campaign->total_sent = 0; // Ajuste conforme necessário para obter o total enviado
+                return $campaign;
+            });
+        return view('admin.message.index', compact('campaigns'));
     }
     public function getMessage()
     {
@@ -47,30 +60,51 @@ class MenssageController extends Controller
     public function create()
     {
         $imagens = ImagemEmMassa::all();
-
-        // Passar as imagens para a visão
-        return view('admin.message.create', compact('imagens'));
+        $contacts = Contact::withCount('contactLists')->get();
+        return view('admin.message.create', compact('imagens', 'contacts'));
     }
     public function bulkMessage(Request $request)
     {
+        $validator = Validator::make($request->all(), [
+            'titulo' => 'required|string|max:255',
+        ]);
 
-        if ($request->texto == "") {
-            return back()->with('error', 'Mensagem não pode estár Vazia');
+        if ($validator->fails()) {
+            return back()->withErrors($validator)->withInput();
         }
-        if ($request->hasFile('csvFile')) {
-            $file = $request->file('csvFile');
 
-            $handle = new SplFileObject($file->getPathname(), 'r');
-
-            foreach ($handle as $linha) {
-                $mensagen = new Messagen();
-                $mensagen->messagem =  $request->texto;
-                $mensagen->image_id =  $request->imagem_id;
-                $mensagen->number = $this->formatarTexto($linha);
-                $mensagen->save();
-            }
+        if (!isset($request->contact_id)) {
+            return redirect()->back()->with('error', 'Seleciono uma lista de Contato.')->withInput();
         }
-        return Redirect::route('admin.message.index')->with('success', 'Mensagem Salva Com Sucesso');
+
+        if (!isset($request->imagem_id)) {
+            return redirect()->back()->with('error', 'Seleciono uma Imagens')->withInput();
+        }
+
+        $campaign = new Campaign();
+        if ($request->texto != null) {
+            $campaign->texto =  $request->texto;
+        }
+        $campaign->titulo =  $request->titulo;
+        $campaign->contact_id = $request->contact_id;
+        $campaign->imagem_id = $request->imagem_id;
+        $campaign->status = 'play';
+        $campaign->save();
+
+        // Fetching contact lists associated with the given contact_id
+        $contactLists = ContactList::where('contact_id', $request->contact_id)->get();
+
+        // Saving relationships in the campaign_contact table
+        foreach ($contactLists as $contactList) {
+            $campaignContact = new CampaignContact();
+            $campaignContact->campaign_id = $campaign->id;
+            $campaignContact->contact_list_id = $contactList->id;
+            $campaignContact->send = false; // Assuming default value is false
+            $campaignContact->save();
+        }
+
+
+        return Redirect::route('admin.campaign.index')->with('success', 'Campanha Salva Com Sucesso');
     }
 
     // public function indexAgendamentos(){
@@ -89,15 +123,17 @@ class MenssageController extends Controller
         // Remover os caracteres (.-+) e espaços
         $textoFormatado = preg_replace('/[.\-+\s]+/', '', $texto);
 
+
+        // Remover o prefixo 55 ou +55 se presente
+        $textoFormatado = preg_replace('/^(55|\+55)/', '', $textoFormatado);
+
         // Se o texto limpo tiver exatamente 11 caracteres, concatenar '55' no início
         if (strlen($textoFormatado) === 11) {
             $textoFormatado = '55' . $textoFormatado;
             return $textoFormatado;
         }
-        
-        return false;
 
-      
+        return false;
     }
 
 

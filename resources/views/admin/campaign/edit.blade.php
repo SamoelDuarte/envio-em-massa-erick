@@ -117,58 +117,47 @@
         <div class="page-header-content py-3">
 
             <div class="d-sm-flex align-items-center justify-content-between">
-                <h1 class="h3 mb-0 text-gray-800">Envio em Massa</h1>
+                <h1 class="h3 mb-0 text-gray-800">Editar Campanha</h1>
                 <form id="formImagem" action="{{ route('upload.imagem') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="input-group mb-3">
                         <input type="file" class="form-control custom-file-input" id="inputImagem" name="imagem"
                             accept="image/*" onchange="document.getElementById('formImagem').submit()">
 
-                        <label class="input-group-text" for="inputImagem">Inserir Mais Imagen</label>
+                        <label class="input-group-text" for="inputImagem">Inserir Mais Imagens</label>
                     </div>
                 </form>
             </div>
 
             <ol class="breadcrumb mb-0 mt-4">
                 <li class="breadcrumb-item"><a href="/">Inicio</a></li>
-                <li class="breadcrumb-item active" aria-current="page"><a
-                        href="{{ route('admin.message.index') }}">Relatório de Envio</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Envio em Massa</li>
+                <li class="breadcrumb-item active" aria-current="page"><a href="{{ route('admin.campaign.index') }}">Relatório de Envio</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Editar Campanha</li>
             </ol>
 
         </div>
-        <form id="myForm" action="{{ route('admin.message.bulk') }}" method="POST" enctype="multipart/form-data">
+        <form id="myForm" action="{{ route('admin.campaign.update', $campaign->id) }}" method="POST" enctype="multipart/form-data">
+            @csrf
+            @method('PUT')
             <div class="row">
                 <div class="col-md-6">
-
-                    @csrf
                     <div class="form-group">
                         <label for="titulo">Titulo da Campanha</label>
-                        <input type="text" name="titulo" class="form-control @error('titulo') is-invalid @enderror" value="{{ old('titulo') }}">
+                        <input type="text" name="titulo" class="form-control @error('titulo') is-invalid @enderror" value="{{ old('titulo', $campaign->titulo) }}">
                         @error('titulo')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
                     <div class="form-group">
                         <label for="texto">Mensagem</label>
-                        <textarea name="texto" class="form-control @error('texto') is-invalid @enderror" rows="3">{{ old('texto') }}</textarea>
+                        <textarea name="texto" class="form-control @error('texto') is-invalid @enderror" rows="3">{{ old('texto', $campaign->texto) }}</textarea>
                         @error('texto')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
 
-                    <label>Selecione a Lista de Contato</label>
-                    <div class="contact-list">
-                        @foreach ($contacts as $contact)
-                            <div class="radio-btn">
-                                <input type="radio" id="contact{{ $contact->id }}" name="contact_id" value="{{ $contact->id }}" {{ old('contact_id') == $contact->id ? 'checked' : '' }}>
-                                <label for="contact{{ $contact->id }}">{{ $contact->name }}</label>
-                            </div>
-                        @endforeach
-                    </div>
-
                     <div class="right-input">
-                        <button type="submit" class="btn btn-success">Enviar</button>
+                        <button type="submit" class="btn btn-success">Atualizar</button>
                         <input type="file" name="csvFile" id="csvFile" style="display: none;">
                     </div>
                 </div>
@@ -177,14 +166,13 @@
                         <!-- Aqui estão os radio buttons com as imagens -->
                         @foreach ($imagens as $imagem)
                             <label class="radio-img">
-                                <input type="radio" name="imagem_id" value="{{ $imagem->id }}" {{ old('imagem_id') == $imagem->id ? 'checked' : '' }}>
+                                <input type="radio" name="imagem_id" value="{{ $imagem->id }}" {{ old('imagem_id', $campaign->imagem_id) == $imagem->id ? 'checked' : '' }}>
                                 <img src="{{ asset($imagem->caminho) }}" alt="Imagem">
                             </label>
                         @endforeach
                     </div>
                 </div>
             </div>
-
         </form>
     </section>
 @endsection

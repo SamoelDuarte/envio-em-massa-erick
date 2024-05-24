@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\admin\CampaignController;
 use App\Http\Controllers\admin\ContactsController;
 use App\Http\Controllers\admin\MenssageController;
 use App\Http\Controllers\admin\ScheduleController;
@@ -126,16 +127,6 @@ Route::middleware(['auth.user'])->group(function () {
         });
 
 
-
-        Route::prefix('/contatos')->controller(ContactsController::class)->group(function () {
-            Route::get('/', 'index')->name('admin.contact.index');
-            Route::post('/contato', 'store')->name('admin.contact.store');;
-            Route::post('/contatoFile', 'storeFile')->name('admin.contact.storeFile');;
-            Route::post('/new', 'storeContact')->name('admin.contact-more-one.store');;
-            Route::get('/detalhes/{id}', 'show')->name('admin.contact.show');;
-            Route::delete('/delete/{id}', 'destroy')->name('admin.contact.destroy');;
-        });
-
         Route::prefix('/chat-bot')->controller(ChatBotController::class)->group(function () {
             Route::get('/', 'index')->name('admin.chatbot.index');
             Route::post('/store', 'store')->name('admin.menu-chat-bot.store');
@@ -167,9 +158,31 @@ Route::middleware(['auth.user'])->group(function () {
             Route::get('/getAgendamentos', 'getAgendamentos')->name('admin.message.getAgendamento');
             Route::post('/upload', 'upload')->name('upload.imagem');
             Route::post('/countContact', 'countContact');
+            Route::get('/novo', 'index')->name('admin.message.index');;
             Route::get('/getMessage', 'getMessage');
             Route::post('/bulk', 'bulkMessage')->name('admin.message.bulk');
-            Route::get('/relatorio-de-envio', 'index')->name('admin.message.index');;
+        });
+
+        Route::prefix('/contatos')->controller(ContactsController::class)->group(function () {
+            Route::get('/', 'index')->name('admin.contact.index');
+            Route::post('/contato', 'store')->name('admin.contact.store');;
+            Route::post('/contatoFile', 'storeFile')->name('admin.contact.storeFile');
+            Route::put('/updateLista/{id}', 'update');
+            Route::post('/new', 'storeContact')->name('admin.contact-more-one.store');
+            Route::get('/detalhes/{id}', 'show')->name('admin.contact.show');
+            Route::delete('/delete/{id}', 'destroy')->name('admin.contact.destroy');
+            Route::delete('/deleteLista', 'delete')->name('admin.contact.deleteLista');
+        });
+
+
+        Route::prefix('/campanha')->controller(CampaignController::class)->group(function () {
+            Route::get('/relatorio-de-envio', 'index')->name('admin.campaign.index');;
+            Route::get('/edit/{id}', 'edit')->name('admin.campaign.edit');
+            Route::get('/ver/{id}', 'show')->name('admin.campaign.show');;
+            Route::post('/updateStatus', 'updateStatus')->name('admin.campaign.updateStatus');
+            Route::put('/update/{id}', 'update')->name('admin.campaign.update');
+            Route::delete('/deletaCampanha/{id}', 'deleteCampanha');
+            Route::delete('/{campaign}/contact/{contactList}', 'destroyContact');
         });
     });
 });

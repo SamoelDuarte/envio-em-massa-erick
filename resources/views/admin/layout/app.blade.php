@@ -93,7 +93,7 @@
                 <div id="message" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
                     <div class="bg-white py-2 collapse-inner rounded">
                         <a class="collapse-item" href="{{ route('admin.message.create') }}">Envio em Massa</a>
-                        <a class="collapse-item" href="{{ route('admin.message.index') }}">Rolatório de Envio</a>
+                        <a class="collapse-item" href="{{ route('admin.campaign.index') }}">Rolatório de Envio</a>
                         <a class="collapse-item" href="{{ route('admin.schedule.index') }}">Agendamentos</a>
                     </div>
                 </div>
