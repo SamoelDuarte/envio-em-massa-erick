@@ -113,25 +113,25 @@ class EventsController extends Controller
 
     public function index()
     {
-        $reponseJson = file_get_contents('php://input');
+        // $reponseJson = file_get_contents('php://input');
 
-        // file_put_contents(Utils::createCode()."-audio.txt",$reponseJson);
-        $reponseArray = json_decode($reponseJson, true);
-        $session = Device::where('session', $reponseArray['data']['sessionId'])->first();
+        // // file_put_contents(Utils::createCode()."-audio.txt",$reponseJson);
+        // $reponseArray = json_decode($reponseJson, true);
+        // $session = Device::where('session', $reponseArray['data']['sessionId'])->first();
 
-        if ($reponseArray['data']['event'] == "DISCONNECTED") {
-            $session->status = "DISCONNECTED";
-            $session->update();
-            exit;
-        }
+        // if ($reponseArray['data']['event'] == "DISCONNECTED") {
+        //     $session->status = "DISCONNECTED";
+        //     $session->update();
+        //     exit;
+        // }
 
-        // verifica se o serviço está em andamento
+        // // verifica se o serviço está em andamento
 
-        $active = 1;
-        if ($active) {
+        // $active = 0;
+        // if ($active) {
 
-            $this->verifyService($reponseArray, $session);
-        }
+        //     $this->verifyService($reponseArray, $session);
+        // }
 
         //  file_put_contents(Utils::createCode().".txt",$reponseJson);
     }
@@ -185,7 +185,7 @@ class EventsController extends Controller
 
         // Obter campanhas ativas
         $campaigns = Campaign::where('status', 'play')->with(['contactList' => function ($query) {
-            $query->wherePivot('send', false);
+            $query->wherePivot('send', false)->limit(1);
         }])->get();
 
 

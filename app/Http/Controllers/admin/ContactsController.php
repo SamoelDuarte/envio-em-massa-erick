@@ -146,6 +146,10 @@ class ContactsController extends Controller
         // Remover os caracteres (.-+) e espaços
         $textoFormatado = preg_replace('/[.\-+\s]+/', '', $texto);
 
+
+        // Remover o prefixo 55 ou +55 se presente
+        $textoFormatado = preg_replace('/^(55|\+55)/', '', $textoFormatado);
+
         // Se o texto limpo tiver exatamente 11 caracteres, concatenar '55' no início
         if (strlen($textoFormatado) === 11) {
             $textoFormatado = '55' . $textoFormatado;
