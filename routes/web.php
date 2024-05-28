@@ -51,8 +51,8 @@ Route::prefix('/admin')->controller(AdminController::class)->group(function () {
     });
 });
 
-Route::prefix('/')->controller(HomeController::class)->group(function () {
-    Route::get('/', 'index');
+Route::prefix('/')->controller(AdminController::class)->group(function () {
+    Route::get('/', 'login');
 });
 
 
